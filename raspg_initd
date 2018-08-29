@@ -21,13 +21,18 @@ ECHO=echo
 do_start_raspg() {
     $ECHO "Raspberry Gate Starting Sequence Started"
     if [ ! -x $RASPGDIR/bin/config-update.sh ] ; then
-	$ECHO "RG Internal Error: No config-update.sh"
+	$ECHO "RG Internal Error: No executable config-update.sh"
 	exit 1
     fi
     ### Run configuration file update
     $RASPGDIR/bin/config-update.sh
-    
 
+    if [ ! -x $RASPGDIR/bin/hostapd-config-update.sh ] ; then
+	$ECHO "RG Internal Error: No executable hostapd-config-update.sh"
+	exit 1
+    fi
+    ### hostapd configuration file update
+    $RASPGDIR/bin/hostapd-config-update.sh
 }
 
 do_start_mode() {

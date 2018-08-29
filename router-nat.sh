@@ -1,8 +1,17 @@
 #!/bin/bash
 
 RASPGDIR=/opt/raspg
+
+TARGET=eth1
+EHTERNET=$(ifconfig | grep $TARGET | awk '{print $1}')
+if [ wlan0$EHTERNET == wlan0 ] ; then
+    TARGET=wlan0
+    /etc/init.d/hostapd start    
+fi
+
+
 ifconfig eth0 down
-ifconfig eth1 down
+ifconfig $TARGET down
 
 modprobe iptable_nat
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -36,7 +45,7 @@ echo -n 'start   ' >> $CONF
 echo $SETADDRESS | sed -e 's/\.1$/.33/' >> $CONF
 echo -n 'end     ' >> $CONF
 echo $SETADDRESS | sed -e 's/\.1$/.191/' >> $CONF
-echo 'interface	eth1' >> $CONF
+echo "interface	$TARGET" >> $CONF
 echo 'opt	dns	8.8.8.8 8.8.4.4' >> $CONF
 echo  'opt subnet  ' $SETMASK >> $CONF
 echo -n 'opt router  ' >> $CONF
@@ -47,10 +56,10 @@ echo $SETADDRESS | sed -e 's/\.1$/.1/' >> $CONF
 dhclient eth0
 
 
-ifconfig eth1 $SETADDRESS netmask $SETMASK
+ifconfig $TARGET $SETADDRESS netmask $SETMASK
 
 iptables --table nat --append POSTROUTING --out-interface eth0 --jump MASQUERADE
-iptables --append FORWARD --in-interface eth1 --jump ACCEPT
+iptables --append FORWARD --in-interface $TARGET --jump ACCEPT
 
 /usr/sbin/udhcpd 
 

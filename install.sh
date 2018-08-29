@@ -22,7 +22,7 @@ fi
 if [ ! -x /sbin/brctl ] ; then
     apt-get install bridge-utils
 fi
-
+ 
 if  [ ! -x  /usr/sbin/udhcpd ] ; then
     apt-get install udhcpd
 fi
@@ -37,26 +37,54 @@ fi
 
 echo "Renew udhcpd.conf"
 cp udhcpd-raspg.conf /etc/udhcpd.conf
+cp udhcpd-raspg.conf /opt/raspg/etc
+
+
+if  [ ! -x  /usr/sbin/hostapd ] ; then
+    apt-get install hostapd
+    echo 'DAEMON_CONF=/etc/hostapd.conf' >> /etc/default/hostapd
+fi
+
+if [ -f hostapd.conf.org ] ; then
+    echo  ""
+else
+    if [ -f /etc/hostapd.conf ] ; then
+	echo  "First installed and backup original hostapd.conf"
+	mv /etc/hostapd.conf /etc/hostapd.conf.org
+    fi
+fi
+
+cp hostapd-raspg.conf /etc/hostapd.conf
+cp hostapd-raspg.conf /opt/raspg/etc
+
+
 
 install bridge.sh /opt/raspg/bin
 install router-nat.sh /opt/raspg/bin
 install config-update.sh /opt/raspg/bin
+install hostapd-config-update.sh /opt/raspg/bin
+
 
 
 if [ -f /opt/raspg/bin/config-update.sh ] ; then
     echo 'Copy raspg into /etc/init.d/'
     install raspg_initd /etc/init.d/raspg
 
-    ## Sometime command insserv is not found.
-    if  [  -x  /usr/sbin/update-rc.d ] ; then
-	## old fashion
-	/usr/sbin/update-rc.d raspg defaults
-    else
-	## newer style
-	/usr/sbin/insserv raspg
-    fi
-
 else
     echo 'Install Error... 1'
     exit 1
 fi
+
+## Sometime command insserv is not found.
+if  [  -x  /usr/sbin/update-rc.d ] ; then
+    ## old fashion
+    /usr/sbin/update-rc.d raspg defaults
+
+    ## DO NOT RUN hostapd BY DEFAULTS
+    /usr/sbin/update-rc.d hostapd disable 
+else
+    ## newer style
+    /usr/sbin/insserv --default raspg
+    /usr/sbin/insserv --remove hostapd
+fi
+
