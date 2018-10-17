@@ -26,4 +26,11 @@ brctl show
 ifconfig eth0 0.0.0.0 up
 ifconfig $TARGET 0.0.0.0 up
 
+
+
+modprobe br_netfilter
+sysctl -w net.bridge.bridge-nf-call-ip6tables=1
+sysctl -w net.bridge.bridge-nf-call-iptables=1
+sysctl -w net.bridge.bridge-nf-call-arptables=1
+
 exit 0

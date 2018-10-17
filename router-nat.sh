@@ -10,8 +10,11 @@ if [ $result -ne 0 ] ; then
     /etc/init.d/hostapd start    
 fi
 
+iptables -F
 
+ip addr flush dev eth0 
 ifconfig eth0 down
+ip addr flush dev $TARGET 
 ifconfig $TARGET down
 
 modprobe iptable_nat
@@ -53,11 +56,9 @@ echo $SETADDRESS | sed -e 's/\.1$/.1/' >> $CONF
 ## GET WAN side ip address 
 dhclient eth0
 
-
 ifconfig $TARGET $SETADDRESS netmask $SETMASK
 iptables --table nat --append POSTROUTING --out-interface eth0 --jump MASQUERADE
 iptables --append FORWARD --in-interface $TARGET --jump ACCEPT
-
 
 /usr/sbin/udhcpd 
 
